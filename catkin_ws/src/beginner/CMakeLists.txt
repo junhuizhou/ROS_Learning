@@ -38,27 +38,53 @@ include_directories(
 
 # build talker
 add_executable(
-  talker 
-  src/talker.cpp
+  talker1 
+  src/talker1.cpp
 )
 target_link_libraries(
-  talker 
+  talker1 
   ${catkin_LIBRARIES}
 )
 add_dependencies(
-  talker 
+  talker1 
   beginner_tutorials_generate_messages_cpp
 )
-#build listener
+# build listener
 add_executable(
-  listener 
-  src/listener.cpp
+  listener1 
+  src/listener1.cpp
 )
 target_link_libraries(
-  listener 
+  listener1 
   ${catkin_LIBRARIES}
 )
 add_dependencies(
-  listener 
+  listener1 
+  beginner_tutorials_generate_messages_cpp
+)
+# build server
+add_executable(
+  server1
+  src/server1
+)
+target_link_libraries(
+  server1
+  ${catkin_LIBRARIES}
+)
+add_dependencies(
+  server1
+  beginner_tutorials_generate_messages_cpp
+)
+# build client
+add_executable(
+  client1
+  src/client1
+)
+target_link_libraries(
+  client1
+  ${catkin_LIBRARIES}
+)
+add_dependencies(
+  client1
   beginner_tutorials_generate_messages_cpp
 )

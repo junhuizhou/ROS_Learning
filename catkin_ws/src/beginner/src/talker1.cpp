@@ -4,9 +4,9 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "talker");
+    ros::init(argc, argv, "talker1");
     ros::NodeHandle n;
-    ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter",1000);
+    ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter",200);
     ros::Rate loop_rate(10);
 
     int count = 0;

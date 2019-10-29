@@ -1,1 +1,1 @@
-int8 number
+int64 number

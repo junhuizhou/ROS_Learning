@@ -1,4 +1,4 @@
-int8 a
-int8 b
+int64 a
+int64 b
 ---
-int8 sum
+int64 sum

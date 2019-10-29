@@ -8,9 +8,9 @@ void chatterCallback(const std_msgs::String::ConstPtr &msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "listener");
+    ros::init(argc, argv, "listener1");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("chatter",1000,chatterCallback);
+    ros::Subscriber sub = n.subscribe("chatter",200,chatterCallback);
     ros::spin();
 
     return 0;
