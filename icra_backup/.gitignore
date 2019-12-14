@@ -1,6 +1,0 @@
-*.pb.cc
-*.pb.h
-.vscode/
-*/.vscode/
-*.prototxt
-*.yaml
