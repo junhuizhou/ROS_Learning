@@ -82,7 +82,7 @@ void ConstraintSet::LoadParam() {
   cx_ = constraint_set_config_.camera_matrix().cx(); 
   cy_ = constraint_set_config_.camera_matrix().cy();
 
-
+  // color_thread_对应的是灰度图中的黑白划分阈值
   color_thread_ = constraint_set_config_.threshold().color_thread();
   blue_thread_ = constraint_set_config_.threshold().blue_thread();
   red_thread_ = constraint_set_config_.threshold().red_thread();

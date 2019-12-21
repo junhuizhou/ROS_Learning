@@ -52,9 +52,10 @@ class CVToolbox {
     camera_sub_ = it.subscribeCamera("color/image_raw",
                                      1,
                                      boost::bind(&CVToolbox::ImageCallback, this, _1,_2));
+    // 订阅realsence相机的深度信息
     depth_sub_= nh.subscribe("aligned_depth_to_color/image_raw",
                                      1,
-                                     &CVToolbox::DepthCallback, this);                  // 这是干啥??
+                                     &CVToolbox::DepthCallback, this);                  
 
     image_buffer_.resize(buffer_size);
     buffer_state_.resize(buffer_size);
@@ -68,7 +69,7 @@ class CVToolbox {
   }
 
   /**
-   * @description: 干啥的这是?
+   * @description: realsence相机获得的深度信息
    * @param {type} 
    * @return: 
    */
@@ -332,6 +333,7 @@ class CVToolbox {
   double capture_time_;
 
   image_transport::CameraSubscriber camera_sub_;
+  // realsence深度信息的订阅器
   ros::Subscriber depth_sub_;
   bool get_img_info_;
   sensor_msgs::CameraInfo camera_info_;
