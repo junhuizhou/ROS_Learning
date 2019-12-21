@@ -1,4 +1,4 @@
-# COMPARE roborts_detection
+# COMPARE robots_detection
 
 * 注明一些比较重要的函数所在等
 * [Detection模块官方教程](https://robomaster.github.io/RoboRTS-Tutorial/#/sdk_docs/roborts_detection)
@@ -73,7 +73,7 @@ ArmorDetectionNode()
         case 1:
             startThread()
             {
-                ExecuteLoop()   
+                ExecuteLoop()       // 循环   
                 {
                     DetectArmor();  // constraint_set.cpp中那个
                     /*
