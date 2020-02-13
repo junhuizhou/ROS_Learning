@@ -77,7 +77,7 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
     return algorithm_init_error;
   }
 
-  GetPlan(temp_plan_);
+  GetPlan(temp_plan_);  //global_plan_ = temp_plan_
 
   cmd_vel.twist.linear.x = 0;
   cmd_vel.twist.linear.y = 0;
@@ -88,8 +88,8 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
   cmd_vel.accel.angular.z = 0;
 
 
-  UpdateRobotPose();
-  UpdateRobotVel();
+  UpdateRobotPose();              //from local_cost_
+  UpdateRobotVel();               //from odom_info_
   UpdateGlobalToPlanTranform();
 
   auto time_now = std::chrono::system_clock::now();

@@ -88,10 +88,21 @@ class TebLocalPlanner : public LocalPlannerBase {
  public:
   TebLocalPlanner();
   ~TebLocalPlanner();
+
+  /**
+   * calculate robot velocity
+   */
   roborts_common::ErrorInfo ComputeVelocityCommands(roborts_msgs::TwistAccel &cmd_vel) override;
   bool IsGoalReached () override;
   roborts_common::ErrorInfo Initialize (std::shared_ptr<roborts_costmap::CostmapInterface> local_cost,
                    std::shared_ptr<tf::TransformListener> tf, LocalVisualizationPtr visual) override;
+  
+  /**
+   * @brief Set global plan's result to local planner or set a goal to local planner
+   * @param plan Result of global planner
+   * @param goal Goal of local planner
+   * @return If true success, else fail
+   */
   bool SetPlan(const nav_msgs::Path& plan, const geometry_msgs::PoseStamped& goal) override ;
   bool GetPlan(const nav_msgs::Path& plan);
   bool SetPlanOrientation();
@@ -173,20 +184,20 @@ class TebLocalPlanner : public LocalPlannerBase {
   //! Robot last position
   DataBase last_robot_pose_;
   //! Plan mutex
-  std::mutex plan_mutex_;
+  std::mutex plan_mutex_;   //互斥锁
 
   //! Optimal param
   Config param_config_;
-  bool  free_goal_vel_;
-  bool  global_plan_overwrite_orientation_;
+  bool  free_goal_vel_;                       //终点零速
+  bool  global_plan_overwrite_orientation_;   //是否重写路径规划点朝向
   float cut_lookahead_dist_;
   long  fesiable_step_look_ahead_;
-  float max_vel_x_;
-  float max_vel_y_;
-  float max_vel_theta_;
-  float max_vel_x_backwards;
-  float xy_goal_tolerance_;
-  float yaw_goal_tolerance_;
+  float max_vel_x_;                           //最大前进速度
+  float max_vel_y_;                           //最大水平速度
+  float max_vel_theta_;                       //最大角速度
+  float max_vel_x_backwards;                  //最大倒退速度
+  float xy_goal_tolerance_;                   //允许距离误差
+  float yaw_goal_tolerance_;                  //允许角度误差
   float osbtacle_behind_robot_dist_;
 
 
