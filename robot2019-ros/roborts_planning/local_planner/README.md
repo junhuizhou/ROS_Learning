@@ -1,6 +1,13 @@
+## local_planner代码阅读笔记
+
+* 结论在最后
+
 ### LINKS
 
 [局部轨迹规划](https://robomaster.github.io/RoboRTS-Tutorial/#/sdk_docs/roborts_planning_local_planner)
+[趣讲局部规划](https://www.leiphone.com/news/201612/0TCtaBOIcFOIBN69.html)
+[TEB流程图](https://blog.csdn.net/xiekaikaibing/article/details/83417223)
+[g2o图优化的使用](https://blog.csdn.net/zzyczzyc/article/details/89036143)
 
 ### TREE
 
@@ -58,7 +65,12 @@ local_planner
 
 * /local_planner/src/local_planner_node.cpp                         局部规划节点 
 * /local_planner/timed_elastic_band/src/teb_local_planner.cpp       TEB算法实现
-* /local_planner/timed_elastic_band/src/teb_optimal.cpp             g2o优化
+* /local_planner/timed_elastic_band/src/teb_optimal.cpp             g2o图优化
+* /local_planner/config/local_planner.prototxt
+* /local_planner/timed_elastic_band/config/timed_elastic_band.prototxt  TEB条件配置
+* teb_velocity_eage.h   图的速度约束边
+* teb_kinematics_edge.h 图的运动学约束边
+* teb_vertex_pose.h     图节点中的姿态部分
 
 ### /local_planner/src/local_planner_node.cpp
 
@@ -106,16 +118,72 @@ TebLocalPlanner::ComputeVelocityCommands
     UpdateViaPointsContainer();
     
     // g2o优化，详情看teb_optimal.cpp
-    Optimal();
-    IsTrajectoryFeasible();
-    GetVelocity();
+    Optimal();                      // 建图、图优化、更新代价
+    IsTrajectoryFeasible();         // 判断优化轨迹是否可行
 
     // 获取最终结果
-    SaturateVelocity();
+    GetVelocity();          //vx,vy,oemga,ax,ay,acc_omega
+    SaturateVelocity();     //对超过实际最大速度值等的优化结果限值
+
+    // 可视化
     Visualize();
 }
 ```
 
 ### /local_planner/timed_elastic_band/src/teb_optimal.cpp
 
-// TODO:待阅，要改的是添加TEB的约束条件中的运动学限制
+* 图优化，节点vertices是状态也是优化量(姿态+时间)，edges是目标优化函数即约束
+* 节点vertices具体细节见teb_vertex_xxx.h等文件
+    * 节点在teb_vertex_console.h由姿态teb_vertex_pose.h和teb_vertex_timediff.h组成
+* 边edge的具体细节见teb_xxx_edge.h等文件
+
+```
+{
+    Optimal()
+    {
+        OptimizeTeb()
+        {
+            BuildGraph()    
+            {
+                AddTebVertices();       
+                AddObstacleLegacyEdges() or AddObstacleEdges();
+                AddVelocityEdges();                                             //分为有无横向速度vy
+                AddAccelerationEdges();
+                AddTimeOptimalEdges();
+                AddKinematicsDiffDriveEdges or AddKinematicsCarlikeEdges();     //差速和类车运动学约束
+                AddPreferRotDirEdges();
+            }
+            OptimizeGraph();            //优化结果见vertices即pose变量
+            ComputeCurrentCost()
+            {
+                getError()
+                {
+                    computeError()
+                    {
+                        // 具体细节见teb_xxx_edge.h等文件
+                        // 涉及各优化函数(此处应为惩罚函数)，由物理量的特性而来
+                    }
+                }
+            }
+        }
+    }
+    IsTrajectoryFeasible();
+    GetVelocity()     //vx,vy,oemga,ax,ay,acc_omega
+    {
+        ExtractVelocity();
+    }
+}
+```
+
+### conclusion
+
+理解：
+* TEB是对全局规划的再优化，在g2o优化后局部会得到一条新轨迹，优化结果直接体现是图中间顶点的改变，
+* 之后会确定这条轨迹是否可行，可行的话就会根据新轨迹特征求出小车的状态量进行控制，     
+* 不同类型车的区别在于g2o优化中的优化函数不一致，优化函数由车的运动特性而来，各优化轨迹区别在于代价不一
+
+修改：
+* 修改车的运动学约束即teb_kinematics_edge.h，目前运动学约束有差动轮型和类车型，可根据差动轮修改
+
+// TODO: 确定末状态节点的车朝向要转弯的处理
+// TODO: 若要修改输出为vx,vy型，改哪些，需商量一下

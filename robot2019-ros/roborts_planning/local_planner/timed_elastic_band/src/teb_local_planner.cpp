@@ -162,6 +162,7 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
     micro_control = true;
   }
 
+  // start to go to teb_optimal.cpp
   bool success = optimal_->Optimal(transformed_plan_, &robot_current_vel_, free_goal_vel_, micro_control);
 
   if (!success) {
@@ -191,6 +192,7 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
     return trajectory_error;
   }
 
+  // ????????vx,vy,???omega,???ax,ay,????acc_omega
   if (!optimal_->GetVelocity(teb_error_info_, cmd_vel.twist.linear.x, cmd_vel.twist.linear.y, cmd_vel.twist.angular.z,
                              cmd_vel.accel.linear.x, cmd_vel.accel.linear.y, cmd_vel.accel.angular.z)) {
     optimal_->ClearPlanner();

@@ -242,13 +242,13 @@ class TebOptimal : public OptimalBase {
 
 
   RobotFootprintModelPtr robot_model_;
-  TebVertexConsole vertex_console_;
+  TebVertexConsole vertex_console_;     //graph vertices console
   boost::shared_ptr<g2o::SparseOptimizer> optimizer_;
   std::pair<bool, geometry_msgs::Twist> vel_start_;
   std::pair<bool, geometry_msgs::Twist> vel_end_;
 
   Robot        robot_info_;
-  Config       param_config_;
+  Config       param_config_;       // /local_planner/timed_elastic_band/config/timed_elastic_band.prototxt
   Obstacles    obstacles_info_;
   Trajectory   trajectory_info_;
   Optimization optimization_info_;

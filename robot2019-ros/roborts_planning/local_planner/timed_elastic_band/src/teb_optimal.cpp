@@ -158,7 +158,7 @@ bool TebOptimal::OptimizeTeb(int iterations_innerloop,
   bool success = false;
   optimized_ = false;
 
-  double weight_multiplier = 1.0;
+  double weight_multiplier = 1.0;   //权重系数
 
   for (int i=0; i<iterations_outerloop; ++i) {
     if (trajectory_info_.teb_autosize()) {
@@ -217,6 +217,7 @@ void TebOptimal::SetVelocityEnd(const geometry_msgs::Twist &vel_end) {
   vel_end_.second = vel_end;
 }
 
+// 从这里开始进入
 bool TebOptimal::Optimal(std::vector<DataBase> &initial_plan,
                       const geometry_msgs::Twist *start_vel,
                       bool free_goal_vel, bool micro_control) {
@@ -323,9 +324,9 @@ bool TebOptimal::BuildGraph(double weight_multiplier) {
 
   if (robot_info_.min_turning_radius() == 0 ||
       optimization_info_.weight_kinematics_turning_radius() == 0) {
-    AddKinematicsDiffDriveEdges();
+    AddKinematicsDiffDriveEdges();      // 差速车，转弯半径为0
   } else {
-    AddKinematicsCarlikeEdges();
+    AddKinematicsCarlikeEdges();        // 类车机器人
   }
 
   AddPreferRotDirEdges();
@@ -350,10 +351,10 @@ bool TebOptimal::OptimizeGraph(int no_iterations, bool clear_after) {
     return false;
   }
 
-  optimizer_->setVerbose(optimization_info_.optimization_verbose());
+  optimizer_->setVerbose(optimization_info_.optimization_verbose());    // 打开调试输出
   optimizer_->initializeOptimization();
 
-  int iter = optimizer_->optimize(no_iterations);
+  int iter = optimizer_->optimize(no_iterations);   // 启动优化，优化结果见vertices即pose变量
   if(!iter) {
     ROS_ERROR("optimize failed");
     return false;
@@ -598,6 +599,7 @@ void TebOptimal::AddViaPointsEdges() {
   }
 }
 
+// max_vel_y，具有平移速度是全向轮的特征
 void TebOptimal::AddVelocityEdges() {
   if (robot_info_.max_vel_y() == 0) {
     if ( optimization_info_.weight_max_vel_x()==0 && optimization_info_.weight_max_vel_theta()==0){

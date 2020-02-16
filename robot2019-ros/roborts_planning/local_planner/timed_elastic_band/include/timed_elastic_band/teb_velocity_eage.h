@@ -73,6 +73,7 @@
 
 namespace roborts_local_planner {
 
+// 无横向速度vy，只有vx和角速度omega
 class VelocityEdge : public TebMultiEdgeBase<2, double> {
 
  public:
@@ -112,6 +113,7 @@ class VelocityEdge : public TebMultiEdgeBase<2, double> {
 
 };
 
+// 有横向速度vy，前向速度vx和角速度omega
 class VelocityHolonomicEdge : public TebMultiEdgeBase<3, double> {
  public:
 

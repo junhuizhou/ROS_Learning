@@ -69,7 +69,7 @@
 #include "local_planner/data_base.h"
 
 namespace roborts_local_planner {
-class TebVertexPose : public g2o::BaseVertex<3, DataBase> {
+class TebVertexPose : public g2o::BaseVertex<3, DataBase> {   // 三个待优化变零x,y,theta
  public:
   TebVertexPose (bool fixed = false) {
     setToOriginImpl();
