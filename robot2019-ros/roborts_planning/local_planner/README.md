@@ -12,6 +12,8 @@
 
 [g2o图优化的使用](https://blog.csdn.net/zzyczzyc/article/details/89036143)
 
+[TF各函数简介](https://www.cnblogs.com/flyinggod/p/10810166.html)
+
 ### TREE
 
 ```
@@ -114,9 +116,9 @@ TebLocalPlanner::ComputeVelocityCommands
     //信息更新
     UpdateRobotPose();              //from local_cost_
     UpdateRobotVel();               //from odom_info_
-    UpdateGlobalToPlanTranform();
-    PruneGlobalPlan();
-    TransformGlobalPlan();
+    UpdateGlobalToPlanTranform();   //更新全局转到局部地图
+    PruneGlobalPlan();              //精简全局地图global_plan_
+    TransformGlobalPlan();          //更新全局转到局部地图，截取小段地图作为局部规划起点终点
     UpdateObstacleWithCostmap();    //obst_vector_.push_back()
     UpdateViaPointsContainer();
     
@@ -133,6 +135,65 @@ TebLocalPlanner::ComputeVelocityCommands
 }
 ```
 
+* PruneGlobalPlan()精简全局地图global_plan_，
+* 方法是用迭代器依次判断与当前位置的距离，小于某距离时剔除起点到计数点的一小段，跳出迭代器循环
+
+```C++
+PruneGlobalPlan()
+{
+    //主要部分
+    for (auto iterator = global_plan_.poses.begin(); iterator != global_plan_.poses.end(); ++iterator) {
+      Eigen::Vector2d temp_vector (robot.getOrigin().x() - iterator->pose.position.x,
+                                   robot.getOrigin().y() - iterator->pose.position.y);
+      if (temp_vector.norm() < 0.8) {   //距离机器人小于0.8
+        if (iterator == global_plan_.poses.begin()) {
+          break;
+        }
+        global_plan_.poses.erase(global_plan_.poses.begin(), iterator); //剔除begin到iterator这段global_plan_
+        break;
+      }
+    }
+}
+```
+
+* TransformGlobalPlan()全局地图转到局部地图坐标系，计算局部代价地图的范围，将范围之外的剔除
+* 截取长度为cut_lookahead_dist_的一小段，小段中的点放进transformed_plan_
+* transformed_plan_将在Optimal()中使用，详情看teb_optimal.cpp
+
+```
+TransformGlobalPlan()   //提取局部地图内的全局规划。提取后的计划所在坐标系仍然为global_frame.
+{
+    transformed_plan_.clear();
+    UpdateGlobalToPlanTranform();
+    tf_.lock()->transformPose(global_plan_.poses.front().header.frame_id, robot_tf_pose_, robot_pose);
+
+    //这里有一段关于sq_dist与sq_dist_threshold比较的，用于确定小段局部地图的起点pose[i]
+    while (i < (int)global_plan_.poses.size()) {
+      double x_diff = robot_pose.getOrigin().x() - global_plan_.poses[i].pose.position.x;
+      double y_diff = robot_pose.getOrigin().y() - global_plan_.poses[i].pose.position.y;
+      new_sq_dist = x_diff * x_diff + y_diff * y_diff;
+      if (new_sq_dist > sq_dist && sq_dist < sq_dist_threshold) {
+        sq_dist = new_sq_dist;
+        break;
+      }
+      sq_dist = new_sq_dist;
+      ++i;
+    }
+
+    //从上面得到的pose[i]开始截取长度为cut_lookahead_dist_的一小段，小段中的点放进transformed_plan_
+    //transformed_plan_中点的坐标都是局部地图坐标系即机器人坐标系
+    while(i < (int)global_plan_.poses.size() &&
+        sq_dist <= sq_dist_threshold && (cut_lookahead_dist_<=0 ||
+        plan_length <= cut_lookahead_dist_)) 
+    {
+        global_plan_.poses[i]-------->data_pose;
+        transformed_plan_.push_back(data_pose);
+        plan_length += Distance(pose[i-1], pose[i]);
+        i++;
+    }
+}
+```
+
 ### /local_planner/timed_elastic_band/src/teb_optimal.cpp
 
 * 图优化，节点vertices是状态也是优化量(姿态+时间)，edges是目标优化函数即约束
@@ -142,8 +203,11 @@ TebLocalPlanner::ComputeVelocityCommands
 
 ```
 {
+    // initial_plan = transformed_plan_
     Optimal()
     {
+        DataBase start = initial_plan.front();
+        DataBase goal = initial_plan.back();
         OptimizeTeb()
         {
             BuildGraph()    
@@ -178,15 +242,9 @@ TebLocalPlanner::ComputeVelocityCommands
 }
 ```
 
-### conclusion
+### CONCLUSION
 
 理解：
 * TEB是对全局规划的再优化，在g2o优化后局部会得到一条新轨迹，优化结果直接体现是图中间顶点的改变，
 * 之后会确定这条轨迹是否可行，可行的话就会根据新轨迹特征求出小车的状态量进行控制，     
 * 不同类型车的区别在于g2o优化中的优化函数不一致，优化函数由车的运动特性而来，各优化轨迹区别在于代价不一
-
-修改：
-* 修改车的运动学约束即teb_kinematics_edge.h，目前运动学约束有差动轮型和类车型，可根据差动轮修改
-
-// TODO: 确定末状态节点的车朝向要转弯的处理
-// TODO: 若要修改输出为vx,vy型，改哪些，需商量一下

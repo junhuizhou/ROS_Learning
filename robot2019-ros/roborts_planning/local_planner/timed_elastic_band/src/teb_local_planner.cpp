@@ -67,6 +67,7 @@ TebLocalPlanner::~TebLocalPlanner () {
 
 }
 
+// 核心函数
 roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs::TwistAccel &cmd_vel) {
 
   if (!is_initialized_) {
@@ -90,7 +91,7 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
 
   UpdateRobotPose();              //from local_cost_
   UpdateRobotVel();               //from odom_info_
-  UpdateGlobalToPlanTranform();
+  UpdateGlobalToPlanTranform();   //更新全局地图到局部地图的坐标系转换
 
   auto time_now = std::chrono::system_clock::now();
   oscillation_time_ = std::chrono::duration_cast<std::chrono::milliseconds>(time_now - oscillation_).count() / 1000.0f;
@@ -111,11 +112,11 @@ roborts_common::ErrorInfo TebLocalPlanner::ComputeVelocityCommands(roborts_msgs:
     return algorithm_ok;
   }
 
-  PruneGlobalPlan();
+  PruneGlobalPlan();        //精简地图，除去全局地图中离机器人太近的一小段
 
   int goal_idx;
 
-  if (!TransformGlobalPlan(&goal_idx)) {
+  if (!TransformGlobalPlan(&goal_idx)) {    //先将全局地图转换到局部，再取离机器人一定距离内的一小段作为局部规划的起点终点
     roborts_common::ErrorInfo PlanTransformError(roborts_common::LP_PLANTRANSFORM_ERROR, "plan transform error");
     ROS_ERROR("%s", PlanTransformError.error_msg().c_str());
     return PlanTransformError;
@@ -256,6 +257,7 @@ bool TebLocalPlanner::GetPlan(const nav_msgs::Path& plan) {
   }
 }
 
+//精简global_plan_
 bool TebLocalPlanner::PruneGlobalPlan() {
   if (global_plan_.poses.empty()) {
     return true;
@@ -275,11 +277,11 @@ bool TebLocalPlanner::PruneGlobalPlan() {
     for (auto iterator = global_plan_.poses.begin(); iterator != global_plan_.poses.end(); ++iterator) {
       Eigen::Vector2d temp_vector (robot.getOrigin().x() - iterator->pose.position.x,
                                    robot.getOrigin().y() - iterator->pose.position.y);
-      if (temp_vector.norm() < 0.8) {
+      if (temp_vector.norm() < 0.8) {     //距离机器人小于0.8
         if (iterator == global_plan_.poses.begin()) {
           break;
         }
-        global_plan_.poses.erase(global_plan_.poses.begin(), iterator);
+        global_plan_.poses.erase(global_plan_.poses.begin(), iterator); //剔除begin到iterator这段global_plan_
         break;
       }
     }
@@ -335,6 +337,7 @@ bool TebLocalPlanner::TransformGlobalPlan(int *current_goal_idx) {
     while(i < (int)global_plan_.poses.size() &&
         sq_dist <= sq_dist_threshold && (cut_lookahead_dist_<=0 ||
         plan_length <= cut_lookahead_dist_)) {
+      // global_plan_.poses[i]-------->data_pose;
       const geometry_msgs::PoseStamped& pose = global_plan_.poses[i];
       tf::poseStampedMsgToTF(pose, tf_pose);
       tf_pose.setData(plan_to_global_transform_ * tf_pose);

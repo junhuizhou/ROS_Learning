@@ -170,7 +170,7 @@ class TebLocalPlanner : public LocalPlannerBase {
   //! Tf transform from global planner frame to optimal frame
   tf::StampedTransform plan_to_global_transform_;
   //! Way point after tf transform
-  std::vector<DataBase> transformed_plan_;
+  std::vector<DataBase> transformed_plan_;                    //作为局部规划起点终点的一小段局部地图
   //! When no global planner give the global plan, use local goal express robot end point
   tf::Stamped<tf::Pose> local_goal_;
   //! Error info when running teb local planner algorithm
@@ -190,15 +190,15 @@ class TebLocalPlanner : public LocalPlannerBase {
   Config param_config_;
   bool  free_goal_vel_;                       //终点零速
   bool  global_plan_overwrite_orientation_;   //是否重写路径规划点朝向
-  float cut_lookahead_dist_;
-  long  fesiable_step_look_ahead_;
+  float cut_lookahead_dist_;                  //局部路径规划截取全局路径规划距离
+  long  fesiable_step_look_ahead_;            //计算路径可行性点的个数
   float max_vel_x_;                           //最大前进速度
   float max_vel_y_;                           //最大水平速度
   float max_vel_theta_;                       //最大角速度
   float max_vel_x_backwards;                  //最大倒退速度
   float xy_goal_tolerance_;                   //允许距离误差
   float yaw_goal_tolerance_;                  //允许角度误差
-  float osbtacle_behind_robot_dist_;
+  float osbtacle_behind_robot_dist_;          //考虑车后障碍物距离阈值
 
 
  protected:
